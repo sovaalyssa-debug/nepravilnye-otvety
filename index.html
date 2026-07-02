@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Неправильные ответы</title>
+<style>
+  :root {
+    --ink: #201c1a;
+    --paper: #f2ede4;
+    --card: #fffdf8;
+    --p1: #c4501f;
+    --p1-deep: #9c3c14;
+    --p2: #1f5c4f;
+    --p2-deep: #143f37;
+    --line: rgba(32,28,26,0.14);
+    --shadow: 0 18px 40px rgba(32,28,26,0.14);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100dvh;
+  }
+
+  body {
+    background: var(--paper);
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(196,80,31,0.08), transparent 42%),
+      radial-gradient(circle at 88% 92%, rgba(31,92,79,0.08), transparent 42%);
+    color: var(--ink);
+    font-family: "Georgia", "Iowan Old Style", "Palatino Linotype", serif;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 640px;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
+    gap: 14px;
+  }
+
+  header {
+    text-align: center;
+    padding: 6px 4px 2px;
+  }
+
+  .kicker {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--p1-deep);
+    opacity: 0.75;
+    margin: 0 0 4px;
+  }
+
+  h1 {
+    font-size: clamp(1.4rem, 5vw, 2rem);
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .picker {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  @media (max-width: 380px) {
+    .picker { grid-template-columns: 1fr; }
+  }
+
+  .player-btn {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    border: 2px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    border-radius: 16px;
+    padding: 16px 10px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .player-btn .n {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+
+  .player-btn:active { transform: scale(0.97); }
+
+  .player-btn.p1.active {
+    background: var(--p1);
+    border-color: var(--p1-deep);
+    color: #fff8f2;
+    box-shadow: var(--shadow);
+  }
+  .player-btn.p1.active .n { opacity: 0.85; }
+
+  .player-btn.p2.active {
+    background: var(--p2);
+    border-color: var(--p2-deep);
+    color: #f3fbf8;
+    box-shadow: var(--shadow);
+  }
+  .player-btn.p2.active .n { opacity: 0.85; }
+
+  main {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+
+  .card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--card);
+    border-radius: 22px;
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    padding: clamp(16px, 5vw, 28px);
+    min-height: 0;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .card.p1-active { border-top: 6px solid var(--p1); }
+  .card.p2-active { border-top: 6px solid var(--p2); }
+
+  .counter {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink);
+    opacity: 0.55;
+    text-align: center;
+    margin: 0 0 4px;
+  }
+
+  .progress-track {
+    height: 3px;
+    width: 100%;
+    background: var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 18px;
+    flex-shrink: 0;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 1%;
+    border-radius: 3px;
+    transition: width 0.25s ease, background 0.25s ease;
+  }
+  .progress-fill.p1 { background: var(--p1); }
+  .progress-fill.p2 { background: var(--p2); }
+
+  .question-zone {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    padding: 4px 0;
+  }
+
+  #question {
+    font-size: clamp(1.35rem, 6.2vw, 2.35rem);
+    font-weight: 700;
+    line-height: 1.28;
+    text-align: center;
+    margin: 0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  #question.tap-hint {
+    font-weight: 400;
+    font-size: clamp(1.1rem, 4.5vw, 1.5rem);
+    opacity: 0.55;
+    font-style: italic;
+  }
+
+  .tap-note {
+    text-align: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    opacity: 0.38;
+    margin: 10px 0 0;
+    flex-shrink: 0;
+  }
+
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .next-btn {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    border: none;
+    border-radius: 16px;
+    padding: 17px 18px;
+    cursor: pointer;
+    color: #fff8f2;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .next-btn:active { transform: scale(0.98); }
+  .next-btn.p1 { background: linear-gradient(135deg, var(--p1), var(--p1-deep)); }
+  .next-btn.p2 { background: linear-gradient(135deg, var(--p2), var(--p2-deep)); }
+  .next-btn[disabled] { opacity: 0.4; cursor: default; }
+
+  .row-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .ghost-btn {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1.5px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    opacity: 0.65;
+    border-radius: 14px;
+    padding: 12px 10px;
+    cursor: pointer;
+    transition: opacity 0.15s ease, transform 0.15s ease, background 0.15s ease;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .ghost-btn:active { transform: scale(0.97); opacity: 0.9; }
+
+  footer {
+    text-align: center;
+    padding: 2px 0 4px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    opacity: 0.3;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="kicker">Игра для двоих</p>
+    <h1>Неправильные ответы</h1>
+  </header>
+
+  <div class="picker">
+    <button class="player-btn p1" id="btnP1" onclick="selectPlayer(1)">
+      <span>Игрок 1</span>
+      <span class="n" id="hintP1">100 вопросов</span>
+    </button>
+    <button class="player-btn p2" id="btnP2" onclick="selectPlayer(2)">
+      <span>Игрок 2</span>
+      <span class="n" id="hintP2">100 вопросов</span>
+    </button>
+  </div>
+
+  <main>
+    <div class="card" id="card">
+      <div>
+        <p class="counter" id="counter">Выберите игрока</p>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+      <div class="question-zone" id="tapZone" onclick="handleTap()">
+        <p id="question" class="tap-hint">Нажмите «Игрок 1» или «Игрок 2», чтобы начать</p>
+      </div>
+      <p class="tap-note" id="tapNote"></p>
+    </div>
+  </main>
+
+  <div class="actions">
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()" disabled>Следующий вопрос</button>
+    <div class="row-actions">
+      <button class="ghost-btn" onclick="shuffleCurrent()">Перемешать вопросы</button>
+      <button class="ghost-btn" onclick="resetGame()">Начать заново</button>
+    </div>
+  </div>
+
+  <footer>Все вопросы хранятся в файле · работает офлайн</footer>
+</div>
+
+<script>
+  // ---- Вопросы ----
+  var questionsPlayer1 = ["Какого цвета банан?", "Кто съел Колобка?", "Что растет на дубе?", "Как называется транспорт под землей?", "Чем режут бумагу?", "Кто строит плотины?", "Где живут белые медведи?", "Что показывает градусник?", "Как называется столица Франции?", "Что обычно падает осенью с деревьев?", "Кто говорит «мяу»?", "Что открывает дверь?", "Где живет кит?", "Как называется дом птицы?", "Что нужно сделать перед сном?", "Чем открывают бутылку?", "Кто плавает быстрее: рыба или кошка?", "Что растет на голове?", "Как называется самый холодный сезон?", "Что светит днем?", "Где растут бананы?", "Что лежит в холодильнике?", "Чем чистят зубы?", "Как называется детеныш кошки?", "Что говорит корова?", "Как называется последний месяц года?", "Кто живет в море и имеет восемь щупалец?", "Что можно купить в аптеке?", "Что находится между ушами?", "Как называется птица, которая не летает и живет в Антарктиде?", "Что надевают на палец?", "Что бывает горячим?", "Где живут пчелы?", "Что показывает термометр?", "Что течет в реке?", "Кто кукарекает?", "Какого цвета трава?", "Чем едят кашу?", "Что надевают на голову зимой?", "Где растет картошка?", "Кто строит паутину?", "Что нужно сделать, чтобы открыть книгу?", "Как называется красная ягода с косточкой?", "Чем забивают гвозди?", "Что бывает круглым?", "Кто несет яйца?", "Где можно увидеть акулу?", "Как называется круглая игрушка, которую пинают?", "Кто живет в норе?", "Что растет на пальме?", "Чем пишут мелом?", "Что можно открыть, но нельзя съесть?", "Кто живет в аквариуме?", "Как называется животное с длинной шеей?", "Где спит медведь зимой?", "Чем рисуют на асфальте?", "Что показывает компас?", "Как называется детеныш овцы?", "Где ездит поезд?", "Кто сидит за рулем автомобиля?", "Что можно увидеть ночью на небе?", "Что едят обезьяны?", "Как называется транспорт в небе?", "Кто самый известный враг мышей?", "Что дает корова?", "Как называется сладость на палочке?", "Где живут куры?", "Что пьют из кружки?", "Как называется большой серый слон с хоботом?", "Кто говорит «кря»?", "Что открывают утром?", "Как называется человек, который лечит людей?", "Что нужно надеть на ноги зимой?", "Что горит в костре?", "Что бывает мокрым?", "Где живут рыбы?", "Какого цвета снег?", "Чем режут хлеб?", "Что едят ложкой?", "Как называется транспорт, который ездит по рельсам?", "Кто живет в улье?", "Как называется обувь для дождя?", "Что светит ночью?", "Чем измеряют температуру?", "Где растут яблоки?", "Что надевают на шею зимой?", "Кто мяукает?", "Что появляется после дождя?", "Сколько месяцев в году?", "Что делает холодильник?", "Кто летает на метле в сказках?", "Что растет на клумбе?", "Что течет из крана?", "Как называется самый большой океан?", "Что можно найти в холодильнике?", "Чем стирают одежду?", "Где живет лев?", "Что нужно, чтобы зажечь свечу?", "Кто клюет зерно?", "Сколько будет 2+2?"];
+  var questionsPlayer2 = ["Что говорит петух?", "Какого цвета апельсин?", "Сколько дней в неделе?", "Где растут грибы?", "Кто лает?", "Чем едят суп?", "Как называется столица России?", "Что растет на елке?", "Кто носит панцирь?", "Что надевают на ноги перед обувью?", "Как называется дом собаки?", "Что бывает квадратным?", "Где живут киты?", "Как зовут деревянного мальчика с длинным носом?", "Кто приносит подарки на Новый год?", "Как называется мама теленка?", "Чем пишут на бумаге?", "Что показывает время?", "Где живет крот?", "Кто живет в будке?", "Что можно увидеть в зеркале?", "Что надевают на руки зимой?", "Как называется транспорт, который плавает под водой?", "Что падает зимой с неба?", "Кто откладывает яйца?", "Как называется дом муравьев?", "Где растут кактусы?", "Что надевают, когда идет дождь?", "Как называется большой водоем с соленой водой?", "Кто любит сыр в мультфильмах?", "Что находится между завтраком и ужином?", "Что растет в огороде?", "Кто прыгает по болоту?", "Как называется последний день недели?", "Что нужно сделать перед тем, как съесть суп?", "Чем копают яму?", "Как называется дерево с желудями?", "Что едят на завтрак?", "Где спят люди?", "Что бывает сладким?", "Кто вылупляется из яйца?", "Где живут пингвины?", "Что нужно, чтобы написать письмо?", "Чем копают снег?", "Как называется месяц перед декабрем?", "Что надевают на свадьбу на палец?", "Где растет кактус?", "Кто живет в конуре?", "Кто живет в скворечнике?", "Чем рисуют красками?", "Что растет на виноградной лозе?", "Что открывают ключом?", "Как называется детеныш коровы?", "Кто умеет квакать?", "Как называется большой дом для многих семей?", "Что едят вилкой?", "Что показывает часы?", "Кто живет в хлеву?", "Где живут кенгуру?", "Что носят на запястье?", "Что нужно, чтобы позвонить?", "Чем открывают консервную банку?", "Кто несет мед в улей?", "Где хранят книги дома?", "Как называется прибор для просмотра телевизора?", "Что растет в лесу?", "Что нужно сделать, чтобы позвонить по телефону?", "Какого цвета уголь?", "Как называется детеныш лошади?", "Что кладут под голову во время сна?", "Что можно купить в булочной?", "Кто живет в дупле?", "Как называется белый медведь?", "Что течет из крана в ванной?", "Как называется пятый день недели?", "Что можно открыть зонтом от дождя?", "Чем моют руки?", "Где растут ягоды в лесу?", "Кто дает шерсть?", "Что бывает липким?", "Как называется транспорт с двумя колесами?", "Где живут пингвины летом?", "Какого цвета небо в ясную погоду?", "Что делает стиральная машина?", "Как называется детеныш собаки?", "Сколько колес у велосипеда?", "Кто живет в будке для собаки во дворе?", "Что растет на новогодней ёлке в лесу?", "Какая планета ближе всего к Солнцу?", "Что нужно, чтобы отправить письмо?", "Сколько ног у паука?", "Как называется самый высокий домашний шкаф для одежды?", "Кто живет в раковине улитки?", "Что обычно кладут в чай?", "Какой фрукт обычно красный или зеленый?", "Что появляется на небе после грозы?", "Где обитают белые медведи летом?", "Кто говорит «хрю»?", "Что надеть на ноги зимой?", "Что находится между обедом и ужином?"];
+
+  // ---- Состояние ----
+  var currentPlayer = null;           // 1 или 2
+  var indexPlayer1 = 0;                // текущий индекс вопроса игрока 1
+  var indexPlayer2 = 0;                // текущий индекс вопроса игрока 2
+
+  var STORAGE_KEY = "wrong-answers-game-state-v1";
+
+  function loadState() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      var s = JSON.parse(raw);
+      if (typeof s.indexPlayer1 === "number") indexPlayer1 = clampIndex(s.indexPlayer1, questionsPlayer1.length);
+      if (typeof s.indexPlayer2 === "number") indexPlayer2 = clampIndex(s.indexPlayer2, questionsPlayer2.length);
+      if (Array.isArray(s.questionsPlayer1) && s.questionsPlayer1.length === questionsPlayer1.length) questionsPlayer1 = s.questionsPlayer1;
+      if (Array.isArray(s.questionsPlayer2) && s.questionsPlayer2.length === questionsPlayer2.length) questionsPlayer2 = s.questionsPlayer2;
+    } catch (e) { /* игнорируем повреждённое хранилище */ }
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        indexPlayer1: indexPlayer1,
+        indexPlayer2: indexPlayer2,
+        questionsPlayer1: questionsPlayer1,
+        questionsPlayer2: questionsPlayer2
+      }));
+    } catch (e) { /* хранилище недоступно — просто продолжаем без сохранения */ }
+  }
+
+  function clampIndex(i, len) {
+    if (i < 0) return 0;
+    if (i >= len) return len - 1;
+    return i;
+  }
+
+  function currentList() {
+    return currentPlayer === 1 ? questionsPlayer1 : questionsPlayer2;
+  }
+
+  function currentIndex() {
+    return currentPlayer === 1 ? indexPlayer1 : indexPlayer2;
+  }
+
+  function setCurrentIndex(i) {
+    if (currentPlayer === 1) indexPlayer1 = i; else indexPlayer2 = i;
+  }
+
+  function selectPlayer(n) {
+    currentPlayer = n;
+    document.getElementById("btnP1").classList.toggle("active", n === 1);
+    document.getElementById("btnP2").classList.toggle("active", n === 2);
+    document.getElementById("card").classList.toggle("p1-active", n === 1);
+    document.getElementById("card").classList.toggle("p2-active", n === 2);
+
+    var nextBtn = document.getElementById("nextBtn");
+    nextBtn.disabled = false;
+    nextBtn.classList.remove("p1", "p2");
+    nextBtn.classList.add(n === 1 ? "p1" : "p2");
+
+    document.getElementById("question").classList.remove("tap-hint");
+    document.getElementById("tapNote").textContent = "Можно тапнуть по карточке, чтобы перейти дальше";
+
+    renderQuestion();
+    saveState();
+  }
+
+  function renderQuestion() {
+    var list = currentList();
+    var idx = currentIndex();
+    var q = list[idx];
+    var qEl = document.getElementById("question");
+    var counterEl = document.getElementById("counter");
+    var fillEl = document.getElementById("progressFill");
+
+    if (idx >= list.length) {
+      qEl.textContent = "Вопросы закончились";
+      counterEl.textContent = "Игрок " + currentPlayer + " · пройдено " + list.length + " из " + list.length;
+      fillEl.style.width = "100%";
+      document.getElementById("nextBtn").textContent = "Начать заново";
+      return;
+    }
+
+    qEl.textContent = q;
+    counterEl.textContent = "Игрок " + currentPlayer + " · вопрос " + (idx + 1) + " из " + list.length;
+    fillEl.className = "progress-fill " + (currentPlayer === 1 ? "p1" : "p2");
+    fillEl.style.width = Math.round(((idx + 1) / list.length) * 100) + "%";
+    document.getElementById("nextBtn").textContent = "Следующий вопрос";
+  }
+
+  function nextQuestion() {
+    if (currentPlayer === null) return;
+    var list = currentList();
+    var idx = currentIndex();
+
+    if (idx >= list.length - 1) {
+      // вопросы закончились — начинаем список заново
+      setCurrentIndex(0);
+    } else {
+      setCurrentIndex(idx + 1);
+    }
+
+    if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) {} }
+
+    renderQuestion();
+    saveState();
+  }
+
+  function handleTap() {
+    if (currentPlayer === null) return;
+    nextQuestion();
+  }
+
+  function shuffleCurrent() {
+    if (currentPlayer === null) return;
+    var list = currentList().slice();
+    for (var i = list.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = list[i]; list[i] = list[j]; list[j] = tmp;
+    }
+    if (currentPlayer === 1) questionsPlayer1 = list; else questionsPlayer2 = list;
+    setCurrentIndex(0);
+    renderQuestion();
+    saveState();
+  }
+
+  function resetGame() {
+    indexPlayer1 = 0;
+    indexPlayer2 = 0;
+    if (currentPlayer !== null) {
+      renderQuestion();
+    }
+    saveState();
+  }
+
+  loadState();
+</script>
+</body>
+</html>
